@@ -1,0 +1,59 @@
+:export {
+    variables_scrollbar_thumb: "--scrollbar-thumb";
+    variables_scrollbar_track: "--scrollbar-track";
+    variables_scrollbar_thickness: "--scrollbar-thickness";
+    variables_scroll_size: "--scroll-size";
+}
+
+.scrollbar {
+    --scrollbar-thumb-local: var(--scrollbar-thumb, rgba(0, 0, 0, 0.1));
+    --scrollbar-track-local: var(--scrollbar-track, rgba(0, 0, 0, 0.05));
+    --scrollbar-thickness-local: var(--scrollbar-thickness, 0.8rem);
+    --scrollbar-container-thickness-local: calc(var(--scrollbar-thickness-local) + 1px);
+    --scrollbar-scroll-size: var(--scroll-size, 'auto');
+
+    &::-webkit-scrollbar-track {
+        background: var(--scrollbar-track-local);
+    }
+    
+    &::-webkit-scrollbar-thumb {
+        background: var(--scrollbar-thumb-local);
+    }
+    
+    /* these could be of interest, but in firefox, the arrows are still there - and it does not look that nice */
+    scrollbar-color: var(--scrollbar-thumb-local) var(--scrollbar-track-local);
+    scrollbar-face-color: var(--scrollbar-thumb-local);
+    -ms-scrollbar-face-color: var(--scrollbar-thumb-local);
+    scrollbar-track-color: var(--scrollbar-track-local);
+    -ms-scrollbar-track-color: var(--scrollbar-track-local);
+
+    scrollbar-width: var(--scrollbar-thickness-local);
+
+    &.horizontal {
+        overflow-y: hidden;
+        overflow-x: scroll;
+        height: var(--scrollbar-container-thickness-local);
+        width: 100%;
+
+        >.contents {
+            min-width: var(--scrollbar-scroll-size);
+            max-width: var(--scrollbar-scroll-size);
+            height: 1px;
+            opacity: 0;
+        }
+    }
+
+    &.vertical {
+        overflow-y: scroll;
+        overflow-x: hidden;
+        width: var(--scrollbar-container-thickness-local);
+        height: 100%;
+        
+        >.contents {
+            min-height: var(--scrollbar-scroll-size);
+            max-height: var(--scrollbar-scroll-size);
+            width: 1px;
+            opacity: 0;
+        }
+    }  
+}
