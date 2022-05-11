@@ -1,5 +1,5 @@
-const urn_prefix = 'urn:enhanced-dom:scrollbar'
+const URN_PREFIX = 'urn:enhanced-dom:scrollbar'
 
 export const selectors = {
-  CONTAINER: `${urn_prefix}:CONTAINER`,
+  CONTAINER: `${URN_PREFIX}:CONTAINER`,
 }

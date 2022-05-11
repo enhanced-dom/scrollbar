@@ -1,12 +1,13 @@
-import { HtmlRenderer, IRenderingEngine, SECTION_ID } from "@enhanced-dom/webcomponent"
+import { HtmlRenderer, IRenderingEngine, SECTION_ID } from '@enhanced-dom/webcomponent'
 import classNames from 'classnames'
 import debounce from 'lodash.debounce'
-import * as styles from './scrollbar.webcomponent.css'
-import { selectors } from "./scrollbar.selectors"
+
+import * as styles from './scrollbar.webcomponent.pcss'
+import { selectors } from './scrollbar.selectors'
 
 export enum ScrollDirection {
   horizontal = 'horizontal',
-  vertical = 'vertical'
+  vertical = 'vertical',
 }
 
 export interface ScrollbarWebComponentAttributes {
@@ -22,7 +23,7 @@ export class ScrollbarWebComponent extends HTMLElement {
     scrollSize: styles.variablesScrollSize,
     scrollbarThumb: styles.variablesScrollbarThumb,
     scrollbarTrack: styles.variablesScrollbarTrack,
-    scrollbarThickness: styles.variablesScrollbarThickness
+    scrollbarThickness: styles.variablesScrollbarThickness,
   } as const
 
   static sectionIdentifiers = selectors
@@ -34,27 +35,31 @@ export class ScrollbarWebComponent extends HTMLElement {
     }
   }
 
+  // eslint-disable-next-line  @typescript-eslint/no-unused-vars
   static template = ({ value, direction, ...rest }: Record<string, any> = {}) => {
     return {
       tag: 'div',
       attributes: {
         ...rest,
         class: classNames(styles.scrollbar, direction === ScrollDirection.horizontal ? styles.horizontal : styles.vertical, rest.class),
+        // eslint-disable-next-line @typescript-eslint/naming-convention
         'aria-orientation': direction === ScrollDirection.horizontal ? 'horizontal' : 'vertical',
         role: 'scrollbar',
-        [SECTION_ID]: ScrollbarWebComponent.sectionIdentifiers.CONTAINER
+        [SECTION_ID]: ScrollbarWebComponent.sectionIdentifiers.CONTAINER,
       },
-      children: [{
-        tag: 'div',
-        attributes: {
-          class: styles.contents
-        }
-      }]
+      children: [
+        {
+          tag: 'div',
+          attributes: {
+            class: styles.contents,
+          },
+        },
+      ],
     }
   }
   static renderer: IRenderingEngine = new HtmlRenderer('@enhanced-dom/ScrollbarWebComponent', ScrollbarWebComponent.template)
   private _attributes: Record<string, any> = {
-    value: 0
+    value: 0,
   }
 
   constructor() {
@@ -67,17 +72,21 @@ export class ScrollbarWebComponent extends HTMLElement {
     return this.shadowRoot.querySelector(`*[${SECTION_ID}="${ScrollbarWebComponent.sectionIdentifiers.CONTAINER}"]`)
   }
 
-  private attachScrollListeners() {
-    this.$scrollContainer.addEventListener('scroll', e => {
-      if (e.target === this.$scrollContainer) {
-        this.value = this.$scrollContainer[this.direction === ScrollDirection.vertical ? 'scrollTop' : 'scrollLeft']
-      }
-      e.stopPropagation()
-      this.dispatchEvent(new Event('scroll'))
-    }, true)
+  private _attachScrollListeners() {
+    this.$scrollContainer.addEventListener(
+      'scroll',
+      (e) => {
+        if (e.target === this.$scrollContainer) {
+          this.value = this.$scrollContainer[this.direction === ScrollDirection.vertical ? 'scrollTop' : 'scrollLeft']
+        }
+        e.stopPropagation()
+        this.dispatchEvent(new Event('scroll'))
+      },
+      true,
+    )
   }
 
-  private propagateScrollValue() {
+  private _propagateScrollValue() {
     const currentScrollValue = this.$scrollContainer[this.direction === ScrollDirection.vertical ? 'scrollTop' : 'scrollLeft']
     if (currentScrollValue != this.value) {
       this.$scrollContainer[this.direction === ScrollDirection.vertical ? 'scrollTop' : 'scrollLeft'] = this.value
@@ -87,7 +96,7 @@ export class ScrollbarWebComponent extends HTMLElement {
   render = debounce(
     () => {
       ScrollbarWebComponent.renderer.render(this.shadowRoot, this._attributes)
-      this.attachScrollListeners()
+      this._attachScrollListeners()
     },
     10,
     { leading: false, trailing: true },
@@ -113,17 +122,17 @@ export class ScrollbarWebComponent extends HTMLElement {
   set value(newValue: number) {
     this._attributes.value = newValue
     this.setAttribute('value', newValue.toString())
-    this.propagateScrollValue()
+    this._propagateScrollValue()
   }
 
-  private convertToNumber(newValue: string) {
-    return newValue != null ? parseInt(newValue) : null 
+  private _convertToNumber(newValue: string) {
+    return newValue != null ? parseInt(newValue) : null
   }
 
   attributeChangedCallback(name: string, oldVal: string, newVal: string) {
     if (oldVal !== newVal) {
       if (name === 'value') {
-        this.value = this.convertToNumber(newVal)
+        this.value = this._convertToNumber(newVal)
         return
       } else {
         this._attributes[name] = newVal
