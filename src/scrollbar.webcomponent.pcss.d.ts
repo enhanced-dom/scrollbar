@@ -2,7 +2,7 @@ export const _stylesheetName: string;
 export const variablesScrollbarThumb: string;
 export const variablesScrollbarTrack: string;
 export const variablesScrollbarThickness: string;
-export const variablesScrollSize: string;
+export const variablesScrollbarScrollSize: string;
 export const scrollbar: string;
 export const horizontal: string;
 export const contents: string;

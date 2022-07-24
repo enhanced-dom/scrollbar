@@ -1,26 +1,28 @@
-import { HtmlRenderer, IRenderingEngine, SECTION_ID } from '@enhanced-dom/webcomponent'
+import { EventListenerTracker, HtmlRenderer, IRenderingEngine, SECTION_ID } from '@enhanced-dom/webcomponent'
 import classNames from 'classnames'
 import debounce from 'lodash.debounce'
 
 import * as styles from './scrollbar.webcomponent.pcss'
 import { selectors } from './scrollbar.selectors'
 
-export enum ScrollDirection {
+export enum ScrollOrientation {
   horizontal = 'horizontal',
   vertical = 'vertical',
 }
 
 export interface ScrollbarWebComponentAttributes {
-  direction: ScrollDirection
+  orientation: ScrollOrientation
 }
 
 export class ScrollbarWebComponent extends HTMLElement {
   static get observedAttributes() {
-    return ['direction', 'class', 'style', 'value']
+    return ['orientation', 'class', 'style', 'value']
   }
 
+  static orientations = ScrollOrientation
+
   static cssVariables = {
-    scrollSize: styles.variablesScrollSize,
+    scrollSize: styles.variablesScrollbarScrollSize,
     scrollbarThumb: styles.variablesScrollbarThumb,
     scrollbarTrack: styles.variablesScrollbarTrack,
     scrollbarThickness: styles.variablesScrollbarThickness,
@@ -36,14 +38,14 @@ export class ScrollbarWebComponent extends HTMLElement {
   }
 
   // eslint-disable-next-line  @typescript-eslint/no-unused-vars
-  static template = ({ value, direction, ...rest }: Record<string, any> = {}) => {
+  static template = ({ value, orientation, ...rest }: Record<string, any> = {}) => {
     return {
       tag: 'div',
       attributes: {
         ...rest,
-        class: classNames(styles.scrollbar, direction === ScrollDirection.horizontal ? styles.horizontal : styles.vertical, rest.class),
+        class: classNames(styles.scrollbar, orientation === ScrollOrientation.horizontal ? styles.horizontal : styles.vertical, rest.class),
         // eslint-disable-next-line @typescript-eslint/naming-convention
-        'aria-orientation': direction === ScrollDirection.horizontal ? 'horizontal' : 'vertical',
+        'aria-orientation': orientation === ScrollOrientation.horizontal ? 'horizontal' : 'vertical',
         role: 'scrollbar',
         [SECTION_ID]: ScrollbarWebComponent.sectionIdentifiers.CONTAINER,
       },
@@ -61,42 +63,53 @@ export class ScrollbarWebComponent extends HTMLElement {
   private _attributes: Record<string, any> = {
     value: 0,
   }
+  private _eventListenerTracker = new EventListenerTracker()
 
   constructor() {
     super()
     this.attachShadow({ mode: 'open' })
+    this._addEventListeners()
     ScrollbarWebComponent.renderer.render(this.shadowRoot, this._attributes)
   }
 
-  private get $scrollContainer() {
+  private _addEventListeners = () => {
+    this._eventListenerTracker.unregister({ nodeLocator: this._findScrollContainer })
+    this._eventListenerTracker.register({
+      hook: (e: Element) => {
+        const scrollMonitor = (event: Event) => {
+          const scrollContainer = this._findScrollContainer()
+          if (event.target === scrollContainer) {
+            event.stopPropagation()
+            this.value = scrollContainer[this.orientation === ScrollOrientation.vertical ? 'scrollTop' : 'scrollLeft']
+            // console.log(`triggered scroll ${this.value}`)
+            this.dispatchEvent(new Event('scroll'))
+          }
+        }
+        e.addEventListener('scroll', scrollMonitor, true)
+
+        return (event1: Element) => {
+          event1.removeEventListener('scroll', scrollMonitor)
+        }
+      },
+      nodeLocator: this._findScrollContainer,
+    })
+  }
+
+  private _findScrollContainer = (): HTMLElement => {
     return this.shadowRoot.querySelector(`*[${SECTION_ID}="${ScrollbarWebComponent.sectionIdentifiers.CONTAINER}"]`)
   }
 
-  private _attachScrollListeners() {
-    this.$scrollContainer.addEventListener(
-      'scroll',
-      (e) => {
-        if (e.target === this.$scrollContainer) {
-          this.value = this.$scrollContainer[this.direction === ScrollDirection.vertical ? 'scrollTop' : 'scrollLeft']
-        }
-        e.stopPropagation()
-        this.dispatchEvent(new Event('scroll'))
-      },
-      true,
-    )
-  }
-
   private _propagateScrollValue() {
-    const currentScrollValue = this.$scrollContainer[this.direction === ScrollDirection.vertical ? 'scrollTop' : 'scrollLeft']
+    const currentScrollValue = this._findScrollContainer()[this.orientation === ScrollOrientation.vertical ? 'scrollTop' : 'scrollLeft']
     if (currentScrollValue != this.value) {
-      this.$scrollContainer[this.direction === ScrollDirection.vertical ? 'scrollTop' : 'scrollLeft'] = this.value
+      this._findScrollContainer()[this.orientation === ScrollOrientation.vertical ? 'scrollTop' : 'scrollLeft'] = this.value
     }
   }
 
   render = debounce(
     () => {
       ScrollbarWebComponent.renderer.render(this.shadowRoot, this._attributes)
-      this._attachScrollListeners()
+      this._eventListenerTracker.refreshSubscriptions()
     },
     10,
     { leading: false, trailing: true },
@@ -106,13 +119,13 @@ export class ScrollbarWebComponent extends HTMLElement {
     this.render()
   }
 
-  get direction() {
-    return this.getAttribute('direction') as ScrollDirection
+  get orientation() {
+    return this.getAttribute('orientation') as ScrollOrientation
   }
 
-  set direction(newDirection: ScrollDirection) {
-    this._attributes.direction = newDirection
-    this.setAttribute('direction', newDirection)
+  set orientation(newOrientation: ScrollOrientation) {
+    this._attributes.orientation = newOrientation
+    this.setAttribute('orientation', newOrientation)
   }
 
   get value(): number {
