@@ -69,7 +69,6 @@ export class ScrollbarWebComponent extends HTMLElement {
     super()
     this.attachShadow({ mode: 'open' })
     this._addEventListeners()
-    ScrollbarWebComponent.renderer.render(this.shadowRoot, this._attributes)
   }
 
   private _addEventListeners = () => {
@@ -100,9 +99,13 @@ export class ScrollbarWebComponent extends HTMLElement {
   }
 
   private _propagateScrollValue() {
-    const currentScrollValue = this._findScrollContainer()[this.orientation === ScrollOrientation.vertical ? 'scrollTop' : 'scrollLeft']
+    const scrollContainer = this._findScrollContainer()
+    if (!scrollContainer) {
+      return
+    }
+    const currentScrollValue = scrollContainer[this.orientation === ScrollOrientation.vertical ? 'scrollTop' : 'scrollLeft']
     if (currentScrollValue != this.value) {
-      this._findScrollContainer()[this.orientation === ScrollOrientation.vertical ? 'scrollTop' : 'scrollLeft'] = this.value
+      scrollContainer[this.orientation === ScrollOrientation.vertical ? 'scrollTop' : 'scrollLeft'] = this.value
     }
   }
 
@@ -117,6 +120,10 @@ export class ScrollbarWebComponent extends HTMLElement {
 
   connectedCallback() {
     this.render()
+  }
+
+  disconnectedCallback() {
+    this.render.cancel()
   }
 
   get orientation() {

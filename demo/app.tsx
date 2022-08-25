@@ -16,7 +16,7 @@ const App = () => {
   const handleScroll = useCallback(
     (e: any) => {
       setValue(e.target.value)
-      console.log(`caught scroll change ${e.target.value}`)
+      // console.log(`caught scroll change ${e.target.value}`)
     },
     [setValue],
   )
