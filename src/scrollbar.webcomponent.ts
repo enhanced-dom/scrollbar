@@ -1,4 +1,5 @@
-import { EventListenerTracker, HtmlRenderer, IRenderingEngine, SECTION_ID } from '@enhanced-dom/webcomponent'
+import { WebcomponentRenderer, IRenderingEngine } from '@enhanced-dom/webcomponent'
+import { EventListenerTracker, SECTION_ID } from '@enhanced-dom/dom'
 import classNames from 'classnames'
 import debounce from 'lodash.debounce'
 
@@ -59,7 +60,7 @@ export class ScrollbarWebComponent extends HTMLElement {
       ],
     }
   }
-  static renderer: IRenderingEngine = new HtmlRenderer('@enhanced-dom/ScrollbarWebComponent', ScrollbarWebComponent.template)
+  static renderer: IRenderingEngine = new WebcomponentRenderer('@enhanced-dom/ScrollbarWebComponent', ScrollbarWebComponent.template)
   private _attributes: Record<string, any> = {
     value: 0,
   }
@@ -161,5 +162,3 @@ export class ScrollbarWebComponent extends HTMLElement {
     }
   }
 }
-
-ScrollbarWebComponent.renderer.addStyle(styles._stylesheetName)
