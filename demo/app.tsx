@@ -1,8 +1,9 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useState, useRef } from 'react'
 import { StylesheetsRepository } from '@enhanced-dom/css'
 
 import Scrollbar from './scrollbar.component'
 import * as styles from './app.pcss'
+import { ScrollbarWebComponent } from '../src'
 
 const stylesheetsRepository = new StylesheetsRepository(document)
 stylesheetsRepository.setProperty(styles._stylesheetName, styles.container, Scrollbar.cssVariables.scrollSize, '1000px')
@@ -13,6 +14,17 @@ stylesheetsRepository.setProperty(styles._stylesheetName, styles.container, Scro
 
 const App = () => {
   const [value, setValue] = useState<number>(0)
+  const dimension = useRef(1000)
+  const increaseDimension = useCallback(() => {
+    dimension.current = dimension.current + 100
+    stylesheetsRepository.setProperty(styles._stylesheetName, styles.container, Scrollbar.cssVariables.scrollSize, `${dimension.current}px`)
+  }, [dimension])
+  const scrollbarRef = useRef<ScrollbarWebComponent>(null)
+  const resetScroll = useCallback(() => {
+    if (scrollbarRef.current) {
+      scrollbarRef.current.value = 0
+    }
+  }, [scrollbarRef])
   const handleScroll = useCallback(
     (e: any) => {
       setValue(e.target.value)
@@ -23,9 +35,11 @@ const App = () => {
   return (
     <div className={styles.container}>
       <div className={styles.scrollbarWrapper}>
-        <Scrollbar onScroll={handleScroll} orientation={Scrollbar.orientations.horizontal} />
+        <Scrollbar ref={scrollbarRef} value={value} onScroll={handleScroll} orientation={Scrollbar.orientations.horizontal} />
       </div>
       <p>{`Scroll value is ${value}`}</p>
+      <button onClick={increaseDimension}>bigger</button>
+      <button onClick={resetScroll}>reset scroll</button>
     </div>
   )
 }

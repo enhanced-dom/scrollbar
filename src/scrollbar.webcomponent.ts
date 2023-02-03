@@ -13,11 +13,13 @@ export enum ScrollOrientation {
 
 export interface ScrollbarWebComponentAttributes {
   orientation: ScrollOrientation
+  value?: number
+  for?: string
 }
 
 export class ScrollbarWebComponent extends HTMLElement {
   static get observedAttributes() {
-    return ['orientation', 'class', 'style', 'value']
+    return ['orientation', 'class', 'style', 'value', 'for']
   }
 
   static orientations = ScrollOrientation
@@ -39,7 +41,7 @@ export class ScrollbarWebComponent extends HTMLElement {
   }
 
   // eslint-disable-next-line  @typescript-eslint/no-unused-vars
-  static template = ({ value, orientation, ...rest }: Record<string, any> = {}) => {
+  static template = ({ value, orientation, for: idOfControlledElement, scrollSize, ...rest }: Record<string, any> = {}) => {
     return {
       tag: 'div',
       attributes: {
@@ -47,6 +49,10 @@ export class ScrollbarWebComponent extends HTMLElement {
         class: classNames(styles.scrollbar, orientation === ScrollOrientation.horizontal ? styles.horizontal : styles.vertical, rest.class),
         // eslint-disable-next-line @typescript-eslint/naming-convention
         'aria-orientation': orientation === ScrollOrientation.horizontal ? 'horizontal' : 'vertical',
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        'aria-valuenow': value,
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        'aria-controls': idOfControlledElement,
         role: 'scrollbar',
         [SECTION_ID]: ScrollbarWebComponent.sectionIdentifiers.CONTAINER,
       },
@@ -55,6 +61,7 @@ export class ScrollbarWebComponent extends HTMLElement {
           tag: 'div',
           attributes: {
             class: styles.contents,
+            role: 'presentation',
           },
         },
       ],
@@ -69,7 +76,6 @@ export class ScrollbarWebComponent extends HTMLElement {
   constructor() {
     super()
     this.attachShadow({ mode: 'open' })
-    this._addEventListeners()
   }
 
   private _addEventListeners = () => {
@@ -120,11 +126,13 @@ export class ScrollbarWebComponent extends HTMLElement {
   )
 
   connectedCallback() {
+    this._addEventListeners()
     this.render()
   }
 
   disconnectedCallback() {
     this.render.cancel()
+    this._eventListenerTracker.unregister({ nodeLocator: this._findScrollContainer })
   }
 
   get orientation() {
@@ -143,6 +151,7 @@ export class ScrollbarWebComponent extends HTMLElement {
   set value(newValue: number) {
     this._attributes.value = newValue
     this.setAttribute('value', newValue.toString())
+    this._findScrollContainer()?.setAttribute('aria-valuenow', newValue.toString())
     this._propagateScrollValue()
   }
 
