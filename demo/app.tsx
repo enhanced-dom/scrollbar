@@ -1,9 +1,9 @@
 import React, { useCallback, useState, useRef } from 'react'
 import { StylesheetsRepository } from '@enhanced-dom/css'
 
-import Scrollbar from './scrollbar.component'
-import * as styles from './app.pcss'
 import { ScrollbarWebComponent } from '../src'
+import { Scrollbar } from './scrollbar.component'
+import * as styles from './app.pcss'
 
 const stylesheetsRepository = new StylesheetsRepository(document)
 stylesheetsRepository.setProperty(styles._stylesheetName, styles.container, Scrollbar.cssVariables.scrollSize, '1000px')

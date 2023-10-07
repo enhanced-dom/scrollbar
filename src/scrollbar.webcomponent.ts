@@ -15,11 +15,12 @@ export interface ScrollbarWebComponentAttributes {
   orientation: ScrollOrientation
   value?: number
   for?: string
+  delegated?: Record<string, string | number | boolean>
 }
 
 export class ScrollbarWebComponent extends HTMLElement {
   static get observedAttributes() {
-    return ['orientation', 'class', 'style', 'value', 'for']
+    return ['orientation', 'value', 'for', 'delegated']
   }
 
   static orientations = ScrollOrientation
@@ -41,12 +42,17 @@ export class ScrollbarWebComponent extends HTMLElement {
   }
 
   // eslint-disable-next-line  @typescript-eslint/no-unused-vars
-  static template = ({ value, orientation, for: idOfControlledElement, scrollSize, ...rest }: Record<string, any> = {}) => {
+  static template = ({ value, orientation, for: idOfControlledElement, scrollSize, delegated = {}, ...rest }: Record<string, any> = {}) => {
     return {
       tag: 'div',
       attributes: {
         ...rest,
-        class: classNames(styles.scrollbar, orientation === ScrollOrientation.horizontal ? styles.horizontal : styles.vertical, rest.class),
+        ...delegated,
+        class: classNames(
+          styles.scrollbar,
+          orientation === ScrollOrientation.horizontal ? styles.horizontal : styles.vertical,
+          delegated.class,
+        ),
         // eslint-disable-next-line @typescript-eslint/naming-convention
         'aria-orientation': orientation === ScrollOrientation.horizontal ? 'horizontal' : 'vertical',
         // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -148,25 +154,37 @@ export class ScrollbarWebComponent extends HTMLElement {
     return this.hasAttribute('value') ? parseInt(this.getAttribute('value')) : 0
   }
 
-  set value(newValue: number) {
-    this._attributes.value = newValue
-    this.setAttribute('value', newValue.toString())
-    this._findScrollContainer()?.setAttribute('aria-valuenow', newValue.toString())
+  set value(newValue: number | string) {
+    const parsedValue = typeof newValue === 'string' ? parseInt(newValue) : newValue
+    this._attributes.value = parsedValue
+    this.setAttribute('value', parsedValue.toString())
+    this._findScrollContainer()?.setAttribute('aria-valuenow', parsedValue.toString())
     this._propagateScrollValue()
   }
 
-  private _convertToNumber(newValue: string) {
-    return newValue != null ? parseInt(newValue) : null
+  get delegated() {
+    return this._attributes.delegated
+  }
+  set delegated(d: string | Record<string, string | number | boolean>) {
+    if (typeof d === 'string') {
+      this._attributes.delegated = JSON.parse(d)
+    } else {
+      this._attributes.delegated = d
+    }
   }
 
   attributeChangedCallback(name: string, oldVal: string, newVal: string) {
     if (oldVal !== newVal) {
-      if (name === 'value') {
-        this.value = this._convertToNumber(newVal)
-        return
-      } else {
-        this._attributes[name] = newVal
-        this.render()
+      switch (name) {
+        case 'value':
+          this.value = newVal
+          break
+        case 'delegated':
+          this.delegated = newVal
+          break
+        default:
+          this._attributes[name] = newVal
+          break
       }
     }
   }
