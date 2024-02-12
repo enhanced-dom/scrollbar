@@ -1,4 +1,4 @@
-import { WebcomponentRenderer, IRenderingEngine } from '@enhanced-dom/webcomponent'
+import { WebcomponentRenderer, type IRenderingEngine } from '@enhanced-dom/webcomponent'
 import { EventListenerTracker, SECTION_ID } from '@enhanced-dom/dom'
 import classNames from 'classnames'
 import debounce from 'lodash.debounce'
@@ -7,8 +7,8 @@ import * as styles from './scrollbar.webcomponent.pcss'
 import { selectors } from './scrollbar.selectors'
 
 export enum ScrollOrientation {
-  horizontal = 'horizontal',
-  vertical = 'vertical',
+  HORIZONTAL = 'horizontal',
+  VERTICAL = 'vertical',
 }
 
 export interface ScrollbarWebComponentAttributes {
@@ -50,11 +50,11 @@ export class ScrollbarWebComponent extends HTMLElement {
         ...delegated,
         class: classNames(
           styles.scrollbar,
-          orientation === ScrollOrientation.horizontal ? styles.horizontal : styles.vertical,
+          orientation === ScrollOrientation.HORIZONTAL ? styles.horizontal : styles.vertical,
           delegated.class,
         ),
         // eslint-disable-next-line @typescript-eslint/naming-convention
-        'aria-orientation': orientation === ScrollOrientation.horizontal ? 'horizontal' : 'vertical',
+        'aria-orientation': orientation === ScrollOrientation.HORIZONTAL ? 'horizontal' : 'vertical',
         // eslint-disable-next-line @typescript-eslint/naming-convention
         'aria-valuenow': value,
         // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -92,7 +92,7 @@ export class ScrollbarWebComponent extends HTMLElement {
           const scrollContainer = this._findScrollContainer()
           if (event.target === scrollContainer) {
             event.stopPropagation()
-            this.value = scrollContainer[this.orientation === ScrollOrientation.vertical ? 'scrollTop' : 'scrollLeft']
+            this.value = scrollContainer[this.orientation === ScrollOrientation.VERTICAL ? 'scrollTop' : 'scrollLeft']
             // console.log(`triggered scroll ${this.value}`)
             this.dispatchEvent(new Event('scroll'))
           }
@@ -116,9 +116,9 @@ export class ScrollbarWebComponent extends HTMLElement {
     if (!scrollContainer) {
       return
     }
-    const currentScrollValue = scrollContainer[this.orientation === ScrollOrientation.vertical ? 'scrollTop' : 'scrollLeft']
+    const currentScrollValue = scrollContainer[this.orientation === ScrollOrientation.VERTICAL ? 'scrollTop' : 'scrollLeft']
     if (currentScrollValue != this.value) {
-      scrollContainer[this.orientation === ScrollOrientation.vertical ? 'scrollTop' : 'scrollLeft'] = this.value
+      scrollContainer[this.orientation === ScrollOrientation.VERTICAL ? 'scrollTop' : 'scrollLeft'] = this.value
     }
   }
 

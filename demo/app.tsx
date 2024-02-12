@@ -35,7 +35,7 @@ const App = () => {
   return (
     <div className={styles.container}>
       <div className={styles.scrollbarWrapper}>
-        <Scrollbar ref={scrollbarRef} value={value} onScroll={handleScroll} orientation={Scrollbar.orientations.horizontal} />
+        <Scrollbar ref={scrollbarRef} value={value} onScroll={handleScroll} orientation={Scrollbar.orientations.HORIZONTAL} />
       </div>
       <p>{`Scroll value is ${value}`}</p>
       <button onClick={increaseDimension}>bigger</button>

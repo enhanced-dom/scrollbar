@@ -1,10 +1,10 @@
-import React from 'react'
+import { type DetailedHTMLProps, type HTMLAttributes } from 'react'
 import { withReactAdapter } from '@enhanced-dom/react'
 
 import { ScrollbarWebComponent, ScrollbarWebComponentAttributes } from '../src'
 
 declare type ScrollbarComponentProps = ScrollbarWebComponentAttributes &
-  React.DetailedHTMLProps<React.HTMLAttributes<ScrollbarWebComponent>, ScrollbarWebComponent>
+  DetailedHTMLProps<HTMLAttributes<ScrollbarWebComponent>, ScrollbarWebComponent>
 
 export const Scrollbar = withReactAdapter<
   ScrollbarWebComponent,
