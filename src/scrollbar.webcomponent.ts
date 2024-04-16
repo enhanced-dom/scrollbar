@@ -1,10 +1,11 @@
 import { WebcomponentRenderer, type IRenderingEngine } from '@enhanced-dom/webcomponent'
-import { EventListenerTracker, SECTION_ID } from '@enhanced-dom/dom'
+import { EventListenerTracker } from '@enhanced-dom/dom'
+import { STYLESHEET_ATTRIBUTE_NAME } from '@enhanced-dom/css'
 import classNames from 'classnames'
 import debounce from 'lodash.debounce'
 
 import * as styles from './scrollbar.webcomponent.pcss'
-import { selectors } from './scrollbar.selectors'
+import { Parts } from './scrollbar.selectors'
 
 export enum ScrollOrientation {
   HORIZONTAL = 'horizontal',
@@ -32,47 +33,55 @@ export class ScrollbarWebComponent extends HTMLElement {
     scrollbarThickness: styles.variablesScrollbarThickness,
   } as const
 
-  static sectionIdentifiers = selectors
-
   static tag = 'enhanced-dom-scrollbar'
+  static identifier = 'urn:enhanced-dom:scrollbar'
+  static parts = Parts
+  static template = ({ value, orientation, for: idOfControlledElement, delegated = {}, ...rest }: Record<string, any> = {}) => {
+    return [
+      {
+        tag: 'style',
+        attributes: {
+          [STYLESHEET_ATTRIBUTE_NAME]: ScrollbarWebComponent.tag,
+        },
+        children: [{ content: styles.css }],
+      },
+      {
+        tag: 'div',
+        attributes: {
+          ...rest,
+          ...delegated,
+          class: classNames(
+            styles.scrollbar,
+            orientation === ScrollOrientation.HORIZONTAL ? styles.horizontal : styles.vertical,
+            delegated.class,
+          ),
+          // eslint-disable-next-line @typescript-eslint/naming-convention
+          'aria-orientation': orientation === ScrollOrientation.HORIZONTAL ? 'horizontal' : 'vertical',
+          // eslint-disable-next-line @typescript-eslint/naming-convention
+          'aria-valuenow': value,
+          // eslint-disable-next-line @typescript-eslint/naming-convention
+          'aria-controls': idOfControlledElement,
+          role: 'scrollbar',
+          part: ScrollbarWebComponent.parts.CONTAINER,
+        },
+        children: [
+          {
+            tag: 'div',
+            attributes: {
+              class: styles.contents,
+              role: 'presentation',
+            },
+          },
+        ],
+      },
+    ]
+  }
   static register = () => {
     if (!window.customElements.get(ScrollbarWebComponent.tag)) {
       window.customElements.define(ScrollbarWebComponent.tag, ScrollbarWebComponent)
     }
   }
 
-  // eslint-disable-next-line  @typescript-eslint/no-unused-vars
-  static template = ({ value, orientation, for: idOfControlledElement, scrollSize, delegated = {}, ...rest }: Record<string, any> = {}) => {
-    return {
-      tag: 'div',
-      attributes: {
-        ...rest,
-        ...delegated,
-        class: classNames(
-          styles.scrollbar,
-          orientation === ScrollOrientation.HORIZONTAL ? styles.horizontal : styles.vertical,
-          delegated.class,
-        ),
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        'aria-orientation': orientation === ScrollOrientation.HORIZONTAL ? 'horizontal' : 'vertical',
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        'aria-valuenow': value,
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        'aria-controls': idOfControlledElement,
-        role: 'scrollbar',
-        [SECTION_ID]: ScrollbarWebComponent.sectionIdentifiers.CONTAINER,
-      },
-      children: [
-        {
-          tag: 'div',
-          attributes: {
-            class: styles.contents,
-            role: 'presentation',
-          },
-        },
-      ],
-    }
-  }
   static renderer: IRenderingEngine = new WebcomponentRenderer('@enhanced-dom/ScrollbarWebComponent', ScrollbarWebComponent.template)
   private _attributes: Record<string, any> = {
     value: 0,
@@ -108,7 +117,7 @@ export class ScrollbarWebComponent extends HTMLElement {
   }
 
   private _findScrollContainer = (): HTMLElement => {
-    return this.shadowRoot.querySelector(`*[${SECTION_ID}="${ScrollbarWebComponent.sectionIdentifiers.CONTAINER}"]`)
+    return this.shadowRoot.querySelector(`*::part(${ScrollbarWebComponent.parts.CONTAINER})`)
   }
 
   private _propagateScrollValue() {

@@ -37,21 +37,26 @@ module.exports = (env = {}, argv = {}) => {
         },
         {
           test: /\.pcss$/,
+          exclude: /demo/,
           use: webpackConfigFactory.loaders.styleConfigFactory({
-            raw: { stylesheetNameAttribute: 'enhanced-dom-title' },
             sourceMap: !isProduction,
             parser: 'postcss',
             typedStyles: true,
             modules: true,
+            raw: true,
+            extract: true,
           }),
         },
         {
-          test: /\.css$/,
+          test: /\.pcss$/,
+          include: /demo/,
           use: webpackConfigFactory.loaders.styleConfigFactory({
-            extract: isProduction,
             sourceMap: !isProduction,
             parser: 'postcss',
-            typedStyles: false,
+            typedStyles: true,
+            modules: true,
+            raw: false,
+            extract: false,
           }),
         },
         {

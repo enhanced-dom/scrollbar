@@ -6,18 +6,18 @@ import { Scrollbar } from './scrollbar.component'
 import * as styles from './app.pcss'
 
 const stylesheetsRepository = new StylesheetsRepository(document)
-stylesheetsRepository.setProperty(styles._stylesheetName, styles.container, Scrollbar.cssVariables.scrollSize, '1000px')
+stylesheetsRepository.setProperty('demo-styles', ':root', Scrollbar.cssVariables.scrollSize, '1000px')
 
-stylesheetsRepository.setProperty(styles._stylesheetName, styles.container, Scrollbar.cssVariables.scrollbarThumb, 'blue')
+stylesheetsRepository.setProperty('demo-styles', ':root', Scrollbar.cssVariables.scrollbarThumb, 'blue')
 
-stylesheetsRepository.setProperty(styles._stylesheetName, styles.container, Scrollbar.cssVariables.scrollbarTrack, 'red')
+stylesheetsRepository.setProperty('demo-styles', ':root', Scrollbar.cssVariables.scrollbarTrack, 'red')
 
 const App = () => {
   const [value, setValue] = useState<number>(0)
   const dimension = useRef(1000)
   const increaseDimension = useCallback(() => {
     dimension.current = dimension.current + 100
-    stylesheetsRepository.setProperty(styles._stylesheetName, styles.container, Scrollbar.cssVariables.scrollSize, `${dimension.current}px`)
+    stylesheetsRepository.setProperty('demo-styles', ':root', Scrollbar.cssVariables.scrollSize, `${dimension.current}px`)
   }, [dimension])
   const scrollbarRef = useRef<ScrollbarWebComponent>(null)
   const resetScroll = useCallback(() => {
@@ -28,7 +28,6 @@ const App = () => {
   const handleScroll = useCallback(
     (e: any) => {
       setValue(e.target.value)
-      // console.log(`caught scroll change ${e.target.value}`)
     },
     [setValue],
   )
