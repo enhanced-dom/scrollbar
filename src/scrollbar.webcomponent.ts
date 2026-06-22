@@ -2,7 +2,7 @@ import { WebcomponentRenderer, type IRenderingEngine } from '@enhanced-dom/webco
 import { EventListenerTracker } from '@enhanced-dom/dom'
 import { STYLESHEET_ATTRIBUTE_NAME } from '@enhanced-dom/css'
 import classNames from 'classnames'
-import debounce from 'lodash.debounce'
+import { debounce } from 'lodash-es'
 
 import * as styles from './scrollbar.webcomponent.pcss'
 import { Parts } from './scrollbar.selectors'
@@ -93,15 +93,21 @@ export class ScrollbarWebComponent extends HTMLElement {
     this.attachShadow({ mode: 'open' })
   }
 
-  private _addEventListeners = () => {
+  private _removeEventListeners = () => {
     this._eventListenerTracker.unregister({ nodeLocator: this._findScrollContainer })
+  }
+
+  private _addEventListeners = () => {
+    this._removeEventListeners()
     this._eventListenerTracker.register({
       hook: (e: Element) => {
         const scrollMonitor = (event: Event) => {
           const scrollContainer = this._findScrollContainer()
           if (event.target === scrollContainer) {
             event.stopPropagation()
-            this.value = scrollContainer[this.orientation === ScrollOrientation.VERTICAL ? 'scrollTop' : 'scrollLeft']
+            if (scrollContainer) {
+              this.value = scrollContainer[this.orientation === ScrollOrientation.VERTICAL ? 'scrollTop' : 'scrollLeft']
+            }
             // console.log(`triggered scroll ${this.value}`)
             this.dispatchEvent(new Event('scroll'))
           }
@@ -116,8 +122,8 @@ export class ScrollbarWebComponent extends HTMLElement {
     })
   }
 
-  private _findScrollContainer = (): HTMLElement => {
-    return this.shadowRoot.querySelector(`*::part(${ScrollbarWebComponent.parts.CONTAINER})`)
+  private _findScrollContainer = () => {
+    return this.shadowRoot?.querySelector(`*::part(${ScrollbarWebComponent.parts.CONTAINER})`)
   }
 
   private _propagateScrollValue() {
@@ -147,7 +153,7 @@ export class ScrollbarWebComponent extends HTMLElement {
 
   disconnectedCallback() {
     this.render.cancel()
-    this._eventListenerTracker.unregister({ nodeLocator: this._findScrollContainer })
+    this._removeEventListeners()
   }
 
   get orientation() {
@@ -160,7 +166,7 @@ export class ScrollbarWebComponent extends HTMLElement {
   }
 
   get value(): number {
-    return this.hasAttribute('value') ? parseInt(this.getAttribute('value')) : 0
+    return this._attributes.value
   }
 
   set value(newValue: number | string) {
