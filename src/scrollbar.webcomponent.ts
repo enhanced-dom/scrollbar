@@ -55,11 +55,11 @@ export class ScrollbarWebComponent extends HTMLElement {
             orientation === ScrollOrientation.HORIZONTAL ? styles.horizontal : styles.vertical,
             delegated.class,
           ),
-          // eslint-disable-next-line @typescript-eslint/naming-convention
+
           'aria-orientation': orientation === ScrollOrientation.HORIZONTAL ? 'horizontal' : 'vertical',
-          // eslint-disable-next-line @typescript-eslint/naming-convention
+
           'aria-valuenow': value,
-          // eslint-disable-next-line @typescript-eslint/naming-convention
+
           'aria-controls': idOfControlledElement,
           role: 'scrollbar',
           part: ScrollbarWebComponent.parts.CONTAINER,
@@ -139,6 +139,9 @@ export class ScrollbarWebComponent extends HTMLElement {
 
   render = debounce(
     () => {
+      if (!this.shadowRoot) {
+        return
+      }
       ScrollbarWebComponent.renderer.render(this.shadowRoot, this._attributes)
       this._eventListenerTracker.refreshSubscriptions()
     },
@@ -163,6 +166,10 @@ export class ScrollbarWebComponent extends HTMLElement {
   set orientation(newOrientation: ScrollOrientation) {
     this._attributes.orientation = newOrientation
     this.setAttribute('orientation', newOrientation)
+    const container = this._findScrollContainer()
+    container?.setAttribute('aria-orientation', newOrientation)
+    container?.classList.toggle(styles.horizontal, newOrientation === ScrollOrientation.HORIZONTAL)
+    container?.classList.toggle(styles.vertical, newOrientation === ScrollOrientation.VERTICAL)
   }
 
   get value(): number {
@@ -188,17 +195,28 @@ export class ScrollbarWebComponent extends HTMLElement {
     }
   }
 
+  get for() {
+    return this._attributes.for
+  }
+  set for(f: string | null | undefined) {
+    this._findScrollContainer()?.setAttribute('id', f ?? '')
+  }
+
   attributeChangedCallback(name: string, oldVal: string, newVal: string) {
     if (oldVal !== newVal) {
       switch (name) {
         case 'value':
           this.value = newVal
           break
+        case 'orientation':
+          this.orientation = newVal as ScrollOrientation
+          break
+        case 'for':
+          this.for = newVal
+          break
         case 'delegated':
           this.delegated = newVal
-          break
-        default:
-          this._attributes[name] = newVal
+          this.render() // for this one we need to render as there may be significant changes to other attributes or styles
           break
       }
     }
